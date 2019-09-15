@@ -1,0 +1,4 @@
+venv/
+build/
+dist/
+requests_with_retries.egg-info/
