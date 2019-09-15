@@ -16,12 +16,16 @@ def test__SessionWithRetries__returns_something():
     assert response.text
 
 
-def test__max_wait_time__by_default():
-    assert SessionWithRetries().max_wait_time() < 1.0
+def test__sum_of_connect_time():
+    assert 2.0 < SessionWithRetries().sum_of_connect_time() < 3.0
 
 
-def test__max_wait_time__worst_case():
-    assert SessionWithRetries().max_wait_time(worst_case=True) < 4.0
+def test__sum_of_backoff_time():
+    assert 0.5 < SessionWithRetries().sum_of_backoff_time() < 1.0
+
+
+def test__sum_of_backoff_time__worst_case():
+    assert 3.0 < SessionWithRetries().sum_of_backoff_time(worst_case=True) < 4.0
 
 
 @pytest.fixture

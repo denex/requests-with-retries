@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import requests
 from requests import Response
@@ -16,8 +16,8 @@ class SessionWithRetries(requests.Session):
     """
     DEFAULT_TIMEOUT = ConnectAndReadTimeout(
         # https://2.python-requests.org/en/master/user/advanced/#timeouts
-        connect_timeout=3.05,
-        read_timeout=7,
+        connect_timeout=0.7,
+        read_timeout=3,
     )
 
     DEFAULT_CONNECT_ATTEMPTS: int = 3
@@ -62,7 +62,27 @@ class SessionWithRetries(requests.Session):
             timeout=self.__timeout,
         )
 
-    def max_wait_time(self, worst_case: bool = False) -> float:
+    def sum_of_connect_time(self) -> Optional[float]:
+        """
+
+        :return:
+        """
+
+        connect_timeout = (
+            self.__timeout[0]
+            if isinstance(self.__timeout, tuple)
+            else self.__timeout
+        )
+        if connect_timeout is None:
+            return None
+
+        number_of_times_to_connect = min(filter(None, (self.__retry.connect, self.__retry.total)))
+        time_socket_waits = connect_timeout * number_of_times_to_connect
+        time_backoff_wait = self.__retries_time(number_of_times_to_connect)
+
+        return time_socket_waits + time_backoff_wait
+
+    def sum_of_backoff_time(self, worst_case: bool = False) -> float:
         """
         :param worst_case: Hypothetical case when
                all retries (connect, read, redirect, status)
@@ -86,7 +106,11 @@ class SessionWithRetries(requests.Session):
             if self.__retry.total is None
             else min(self.__retry.total, sum_of_retries)
         )
+
+        return self.__retries_time(max_retries)
+
+    def __retries_time(self, number_of_retries) -> float:
         # Each retry waits for
         # {backoff factor} * (2 ** ({number of total retries} - 1))
         # so sum of wait time will be {backoff factor} * (2 ** {number of total retries} - 1)
-        return self.__retry.backoff_factor * (2 ** max_retries - 1)
+        return self.__retry.backoff_factor * (2 ** number_of_retries - 1)
