@@ -11,16 +11,13 @@ from requests_with_retries import SessionWithRetries
 
 
 @contextmanager
-def patch_http_response(**attrs):
+def patch_http_response(status=200, reason='OK', length=0, version='1.0', msg=None):
     m_response = MagicMock(spec=http.client.HTTPResponse)
-    m_response.status = 200
-    m_response.length = 0
-    m_response.msg = {}
-    m_response.version = '1.0'
-    m_response.reason = 'OK'
-
-    for attr, value in attrs.items():
-        setattr(m_response, attr, value)
+    m_response.status = status
+    m_response.reason = reason
+    m_response.length = length
+    m_response.msg = msg or {}
+    m_response.version = version
 
     with patch.object(HTTPConnection, 'getresponse', return_value=m_response) as m:
         yield m
