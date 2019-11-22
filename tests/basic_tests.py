@@ -29,7 +29,7 @@ def test__sum_of_backoff_time__worst_case():
 
 
 @pytest.fixture
-def patched_socket_connect():
+def p_socket_connect_error():
     m_sock = Mock()
     m_sock.connect.side_effect = ConnectionRefusedError()
     with patch.object(socket, 'socket', autospec=True, return_value=m_sock):
@@ -37,7 +37,7 @@ def patched_socket_connect():
 
 
 # noinspection PyPep8Naming
-def test__SessionWithRetries__doing_retries(patched_socket_connect):
+def test__SessionWithRetries__doing_retries(p_socket_connect_error):
     with SessionWithRetries() as session:
         with patch.object(
             Retry, 'sleep', autospec=True
@@ -46,10 +46,10 @@ def test__SessionWithRetries__doing_retries(patched_socket_connect):
         ):
             session.get('http://localhost:8000/')
 
-    p_sleep.call_count = session.DEFAULT_CONNECT_ATTEMPTS
+    assert p_sleep.call_count == session.DEFAULT_CONNECT_ATTEMPTS
 
 
-def test__timeouts__applied(patched_socket_connect):
+def test__timeouts__applied(p_socket_connect_error):
     with SessionWithRetries() as session:
         with patch.object(session, 'send', autospec=True) as m_send:
             session.get('http://localhost:8000/')
@@ -58,7 +58,7 @@ def test__timeouts__applied(patched_socket_connect):
 
 
 # noinspection PyPep8Naming
-def test__request__raises_ValueError_on_timeout(patched_socket_connect):
+def test__request__raises_ValueError_on_timeout(p_socket_connect_error):
     with SessionWithRetries() as session:
         with pytest.raises(
             ValueError,

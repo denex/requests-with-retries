@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 import requests
 from requests import Response
@@ -30,7 +30,7 @@ class SessionWithRetries(requests.Session):
         connect_attempts: int = DEFAULT_CONNECT_ATTEMPTS,
         read_attempts: int = DEFAULT_READ_ATTEMPTS,
         backoff_factor: float = DEFAULT_BACKOFF_FACTOR,
-        **retry_options: Dict[str, Any],
+        **retry_options: Any,
     ):
         super().__init__()
 
